@@ -1,0 +1,30 @@
+{
+  "_note": "Tourist VAT/GST refund. vatRate values are standard national rates and are the confident part. refundFactor is the share of VAT a departing visitor actually recovers after operator fees, and minSpend is the per-receipt threshold — BOTH VARY BY SCHEME AND OPERATOR AND ARE NOT YET SOURCED. Any entry with verified:false is treated as ZERO refund by the ranker, so an unsourced country is ranked conservatively rather than optimistically. Fill these in from an authoritative source before trusting any 'you save X' claim.",
+  "countries": {
+    "sg": { "vatRate": 0.09,  "scheme": "GST Tourist Refund Scheme", "refundFactor": null, "minSpend": null, "verified": false },
+    "hk": { "vatRate": 0.00,  "scheme": "no VAT/GST",                "refundFactor": 0,    "minSpend": 0,    "verified": true,
+            "note": "Hong Kong levies no sales tax, so the shelf price is the final price. No refund to model." },
+    "uk": { "vatRate": 0.20,  "scheme": "none for visitors",         "refundFactor": 0,    "minSpend": 0,    "verified": true,
+            "note": "The UK abolished VAT-free shopping for overseas visitors in Jan 2021. There is no refund to claim." },
+    "de": { "vatRate": 0.19,  "scheme": "EU VAT refund",             "refundFactor": null, "minSpend": null, "verified": false },
+    "fr": { "vatRate": 0.20,  "scheme": "EU VAT refund",             "refundFactor": null, "minSpend": null, "verified": false },
+    "es": { "vatRate": 0.21,  "scheme": "EU VAT refund",             "refundFactor": null, "minSpend": null, "verified": false },
+    "it": { "vatRate": 0.22,  "scheme": "EU VAT refund",             "refundFactor": null, "minSpend": null, "verified": false },
+    "nl": { "vatRate": 0.21,  "scheme": "EU VAT refund",             "refundFactor": null, "minSpend": null, "verified": false },
+    "ch-de": { "vatRate": 0.081, "scheme": "Swiss VAT refund",          "refundFactor": null, "minSpend": null, "verified": false },
+    "tr": { "vatRate": 0.20,  "scheme": "Turkish VAT refund",        "refundFactor": null, "minSpend": null, "verified": false },
+    "in": { "vatRate": 0.18,  "scheme": "GST, no tourist refund",    "refundFactor": 0,    "minSpend": 0,    "verified": false },
+    "th": { "vatRate": 0.07,  "scheme": "VAT Refund for Tourists",   "refundFactor": null, "minSpend": null, "verified": false },
+    "my": { "vatRate": 0.10,  "scheme": "SST, no tourist refund",    "refundFactor": 0,    "minSpend": 0,    "verified": false },
+    "au": { "vatRate": 0.10,  "scheme": "Tourist Refund Scheme",     "refundFactor": null, "minSpend": null, "verified": false },
+    "kr": { "vatRate": 0.10,  "scheme": "Korea tax refund",          "refundFactor": null, "minSpend": null, "verified": false },
+    "tw": { "vatRate": 0.05,  "scheme": "Taiwan tax refund",         "refundFactor": null, "minSpend": null, "verified": false },
+    "ae": { "vatRate": 0.05,  "scheme": "UAE tourist refund",        "refundFactor": null, "minSpend": null, "verified": false },
+    "sa": { "vatRate": 0.15,  "scheme": "Saudi tourist refund",      "refundFactor": null, "minSpend": null, "verified": false },
+    "qa": { "vatRate": 0.00,  "scheme": "no VAT",                    "refundFactor": 0,    "minSpend": 0,    "verified": false },
+    "jp": { "vatRate": 0.10,  "scheme": "consumption tax exemption", "refundFactor": null, "minSpend": null, "verified": false },
+    "ca": { "vatRate": 0.13,  "scheme": "no federal visitor refund", "refundFactor": 0,    "minSpend": 0,    "verified": false },
+    "":   { "vatRate": 0.00,  "scheme": "US sales tax varies by state", "refundFactor": 0, "minSpend": 0,    "verified": false,
+            "note": "US shelf prices exclude sales tax, which is added at checkout and varies by state. Virginia is about 6%." }
+  }
+}

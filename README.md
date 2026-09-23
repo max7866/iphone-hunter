@@ -54,7 +54,7 @@ request per (part number, location) per refresh window no matter how many visito
 - **Public site**, static front end on S3 + CloudFront, same pattern as `wc2026-predictions`.
 - **Lambda** for Apple queries and flight lookups; **DynamoDB** as the cache and the thing
   that shields Apple from public traffic.
-- **Live flight prices** via an API (Amadeus Self-Service free tier is the likely choice).
+- **Live flight prices** via a *pluggable* provider (see below — Amadeus is gone).
 - **User picks any origin airport** — needs an IATA airport dataset.
 - Terraform for all infrastructure.
 
@@ -74,8 +74,26 @@ infra/              terraform                           (empty)
 npm run probe -- sg hk uk de jp
 ```
 
-## Open questions
+## Flight pricing: Amadeus is gone
 
-- Flight API choice and whether its free tier survives public traffic.
-- Tourist VAT/GST refund rates per country — real money, varies a lot, needs a sourced table.
+**Amadeus Self-Service was decommissioned on 17 July 2026** — existing keys stopped working
+and signups are closed. Kiwi Tequila went invite-only. Most guides still recommend both.
+
+Because a provider can disappear mid-project, `scripts/flights.mjs` is an interface, not a
+vendor:
+
+| Provider | Cost | Data |
+|---|---|---|
+| `estimateProvider` | free, no key | great-circle distance model. Ranking only; every result is flagged `estimate: true` so it can never be shown as a fare. |
+| `travelpayoutsProvider` | free token | cached cheapest fares from Aviasales search history (7-day cache). Affiliate model, so it pays us rather than costing us. |
+| Duffel | ~$0.005/search for us | real bookable fares. We never book flights, so the 1500:1 search-to-book allowance never applies and every search bills. |
+
+`api.travelpayouts.com` answers 401 without a token, confirming it is live.
+
+## Open questions
+- Tourist VAT/GST refund rates — `data/vat.json` has standard VAT rates, but the refund
+  factor and minimum spend per scheme are **unsourced and flagged `verified: false`**. The
+  ranker treats unverified entries as zero refund so no country is ranked optimistically on
+  invented numbers. Two are settled: Hong Kong has no VAT at all, and the UK abolished
+  visitor VAT refunds in 2021.
 - Whether to show reservation deep links per store or bounce to Apple's own picker.

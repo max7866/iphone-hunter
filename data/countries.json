@@ -9,7 +9,7 @@
     { "cc": "es", "name": "Spain",          "currency": "EUR", "simTray": true,  "location": "28013" },
     { "cc": "it", "name": "Italy",          "currency": "EUR", "simTray": true,  "location": "20121" },
     { "cc": "nl", "name": "Netherlands",    "currency": "EUR", "simTray": true,  "location": "1012" },
-    { "cc": "ch", "name": "Switzerland",    "currency": "CHF", "simTray": true,  "location": "8001" },
+    { "cc": "ch-de", "name": "Switzerland",    "currency": "CHF", "simTray": true,  "location": "8001" },
     { "cc": "tr", "name": "Turkey",         "currency": "TRY", "simTray": true,  "location": "34365" },
     { "cc": "in", "name": "India",          "currency": "INR", "simTray": true,  "location": "400051" },
     { "cc": "th", "name": "Thailand",       "currency": "THB", "simTray": true,  "location": "10330" },
