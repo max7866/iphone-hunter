@@ -56,6 +56,37 @@ export async function fetchCatalog(cc, family = 'iphone-18-pro') {
   return [...seen.values()];
 }
 
+/**
+ * Pickup availability for up to 16 part numbers in ONE request.
+ * The endpoint accepts parts.0..parts.N but silently truncates: ask for 32 and you get
+ * 20 back with no error. 16 keeps a safe margin and turns a 32-SKU catalog into 2 calls.
+ */
+export async function fetchAvailabilityBatch(cc, partNumbers, location) {
+  const out = new Map();
+  for (let i = 0; i < partNumbers.length; i += 16) {
+    const batch = partNumbers.slice(i, i + 16);
+    const qs = batch.map((p, n) => `parts.${n}=${encodeURIComponent(p)}`).join('&');
+    const url =
+      `${base(cc)}/shop/retail/pickup-message?pl=true&mts.0=regular&${qs}` +
+      `&location=${encodeURIComponent(location)}`;
+    const json = await (await get(url, `${base(cc)}/shop/buy-iphone/iphone-18-pro`)).json();
+    const stores = json?.body?.stores ?? [];
+    for (const part of batch) {
+      const hits = stores
+        .filter((s) => s.partsAvailability?.[part]?.pickupDisplay === 'available')
+        .map((s) => ({
+          storeName: s.storeName,
+          city: s.city,
+          airport: /airport|changi|jewel/i.test(s.storeName ?? ''),
+          reserveUrl: (s.makeReservationUrl ?? s.reservationUrl ?? null)?.replace(/^http:/, 'https:') ?? null,
+        }));
+      out.set(part, { available: hits, totalStores: stores.length });
+    }
+    if (i + 16 < partNumbers.length) await politeSleep();
+  }
+  return out;
+}
+
 /** Pickup availability for one part number near one location. */
 export async function fetchAvailability(cc, partNumber, location) {
   const url =

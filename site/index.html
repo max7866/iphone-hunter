@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>iPhone Hunter — the cheapest way to actually get one</title>
-<meta name="description" content="Find an iPhone 18 Pro in stock at Apple Stores worldwide, filter by colour, capacity and physical SIM tray, and rank by landed cost — device price plus the flight to go get it.">
-<meta name="theme-color" content="#14161A">
+<title>iPhone Hunter — find one, anywhere, for the least total cost</title>
+<meta name="description" content="Find an iPhone 18 Pro or Pro Max in stock at Apple Stores worldwide. Filter by colour, capacity and physical SIM tray, and rank every market by landed cost — the phone plus the flight to go get it.">
+<meta name="theme-color" content="#0E1013">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -13,101 +13,115 @@
 </head>
 <body>
 
-<header class="masthead">
-  <div class="wrap">
-    <p class="rule">Apple Store stock · worldwide · landed cost</p>
-    <h1>The phone isn't the price.<br><span class="hl">Getting to it is.</span></h1>
-    <p class="lede">
-      Availability trackers tell you where an iPhone is in stock. They don't tell you what it
-      costs to be standing in that shop. This ranks every Apple market by <strong>landed
-      cost</strong> — the device in local currency, minus any tax refund you'd actually
-      recover, plus the round-trip airfare from your airport.
-    </p>
-    <p class="lede">
-      It exists because of one specific problem: <strong>the US doesn't sell an iPhone 18 Pro
-      with a physical SIM tray.</strong> Neither do Canada, Japan, or the UAE. If you need
-      one, you have to leave — and the cheapest phone is rarely the cheapest trip.
-    </p>
+<header class="top">
+  <div class="wrap top__inner">
+    <a class="brand" href="./">
+      <span class="brand__mark" aria-hidden="true"></span>
+      iPhone Hunter
+    </a>
+    <p class="top__note" id="stamp">—</p>
   </div>
 </header>
 
-<main class="wrap">
-
-  <section class="board" aria-labelledby="live">
-    <div class="board__head">
-      <h2 id="live">Live right now</h2>
-      <p class="board__meta" id="meta">Loading…</p>
-    </div>
-
-    <div class="tablewrap">
-      <table id="table">
-        <thead>
-          <tr>
-            <th scope="col">Market</th>
-            <th scope="col" class="num">Device</th>
-            <th scope="col" class="num">Flight</th>
-            <th scope="col" class="num">Landed</th>
-            <th scope="col" class="num">In stock</th>
-            <th scope="col">Go</th>
-          </tr>
-        </thead>
-        <tbody id="rows">
-          <tr><td colspan="6" class="empty">Loading live data…</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <p class="foot" id="baseline"></p>
-  </section>
-
-  <section class="cols">
-    <div>
-      <h3>Why the cheapest phone loses</h3>
-      <p id="inversion">
-        The cheapest phone on the board is rarely the cheapest trip. A market can undercut
-        everyone on the device and still lose once the airfare lands on top — while a
-        pricier one wins because it is close. That inversion is the entire point, and no
-        availability tracker can show it.
-      </p>
-    </div>
-    <div>
-      <h3>Airport stores count double</h3>
-      <p>
-        Some Apple Stores sit inside the terminal — Jewel Changi is one. For those routes a
-        layover can be enough: you never clear immigration, never book a hotel, never lose a
-        day. Stores inside an airport are marked <span class="tag">✈</span> above.
-      </p>
-    </div>
-    <div>
-      <h3>No invented savings</h3>
-      <p>
-        Tax refund rates are real money and vary by scheme, operator and minimum spend.
-        Where the scheme isn't verified against a source, this counts the refund as
-        <strong>zero</strong> rather than guessing. Two are settled: Hong Kong has no VAT at
-        all, and the UK abolished visitor refunds in 2021.
-      </p>
-    </div>
-  </section>
-
-  <section class="status">
-    <h3>Status</h3>
-    <p>
-      In development. The data layer is live across 22 Apple markets — catalog, local
-      pricing, per-store stock and reservation links — with real round-trip fares and
-      booking links. Still to come: the filter pane for colour, capacity and SIM tray, a
-      sourced tax-refund table, and any-airport origin selection.
+<section class="hero">
+  <div class="wrap">
+    <h1>Somewhere in the world, <span class="hl">it's in stock.</span></h1>
+    <p class="lede">
+      The US doesn't sell an iPhone 18 Pro with a physical SIM tray. Neither do Canada,
+      Japan or the UAE. This finds every Apple Store that does — then ranks them by what it
+      actually costs to be standing in one.
     </p>
-    <p class="fineprint">
-      Not affiliated with Apple. Stock and prices are read from Apple's public store pages
-      and cached; verify before you book anything. Flight links are affiliate links — they
-      cost you nothing and help fund the site.
-    </p>
+  </div>
+
+  <figure class="map" id="map">
+    <svg id="worldsvg" viewBox="0 42 1000 380" role="img" aria-label="World map showing Apple Stores with stock">
+      <g id="world"></g>
+      <g id="pins"></g>
+    </svg>
+    <div class="maptip" id="maptip" hidden></div>
+    <figcaption class="map__legend">
+      <span class="key key--yes"></span> in stock
+      <span class="key key--no"></span> none today
+      <span class="key key--tray">◎</span> physical SIM tray
+      <span class="map__hint">Dot size tracks landed cost — smaller is cheaper.</span>
+    </figcaption>
+  </figure>
+</section>
+
+<main class="wrap app">
+
+  <aside class="filters" id="filters">
+    <div class="filters__head">
+      <h2>Filter</h2>
+      <button type="button" class="linkbtn" id="reset">Reset</button>
+    </div>
+
+    <div class="field">
+      <label for="origin">Flying from</label>
+      <select id="origin"></select>
+    </div>
+
+    <fieldset class="field">
+      <legend>Model</legend>
+      <div class="chips" id="f-model"></div>
+    </fieldset>
+
+    <fieldset class="field">
+      <legend>Capacity</legend>
+      <div class="chips" id="f-capacity"></div>
+    </fieldset>
+
+    <fieldset class="field">
+      <legend>Colour</legend>
+      <div class="swatches" id="f-color"></div>
+    </fieldset>
+
+    <div class="field toggle">
+      <label class="switch">
+        <input type="checkbox" id="f-tray">
+        <span class="switch__track" aria-hidden="true"><span class="switch__dot"></span></span>
+        <span class="switch__label">Physical SIM tray only</span>
+      </label>
+      <p class="hint" id="trayhint">The iPhone Duo is eSIM-only everywhere, so this filter never applies to it.</p>
+    </div>
+
+    <div class="field toggle">
+      <label class="switch">
+        <input type="checkbox" id="f-stock" checked>
+        <span class="switch__track" aria-hidden="true"><span class="switch__dot"></span></span>
+        <span class="switch__label">In stock today only</span>
+      </label>
+    </div>
+
+    <div class="field">
+      <label for="sort">Rank by</label>
+      <select id="sort">
+        <option value="landed">Landed cost</option>
+        <option value="device">Device price</option>
+        <option value="flight">Flight cost</option>
+        <option value="stock">Most stock</option>
+      </select>
+    </div>
+  </aside>
+
+  <section class="results" aria-live="polite">
+    <div class="results__head">
+      <h2 id="count">—</h2>
+      <p class="results__sub" id="sub"></p>
+    </div>
+    <ol class="cards" id="cards"></ol>
+    <p class="fineprint" id="fine"></p>
   </section>
 
 </main>
 
-<footer class="wrap">
-  <p>iPhone Hunter · built by <a href="https://github.com/max7866">max7866</a></p>
+<footer class="wrap foot">
+  <p>
+    Not affiliated with Apple. Stock and prices come from Apple's public store pages and are
+    cached — verify before you travel. Flight links are affiliate links: they cost you
+    nothing and help fund the site.
+  </p>
+  <p>Built by <a href="https://github.com/max7866/iphone-hunter">max7866</a></p>
 </footer>
 
 <script src="app.js"></script>

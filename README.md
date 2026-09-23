@@ -61,12 +61,35 @@ request per (part number, location) per refresh window no matter how many visito
 ## Layout
 
 ```
-scripts/apple.mjs   data layer: catalog + availability  (proven)
-scripts/probe.mjs   CLI probe across countries          (proven)
-data/countries.json 22 markets, SIM-tray flag, store-search location
-site/               static front end                    (empty)
-infra/              terraform                           (empty)
+scripts/apple.mjs        catalog + availability (batched, 16 SKUs per request)
+scripts/fx.mjs           USD conversion for 18 currencies
+scripts/flights.mjs      pluggable fare providers + fallback chain
+scripts/cache.mjs        cache interface (file now, DynamoDB later)
+scripts/matrix.mjs       builds site/data/matrix.json  (markets x SKUs x stock)
+scripts/build-flights.mjs builds site/data/flights.json (fares per origin)
+scripts/build-map.mjs    builds site/data/world.json    (SVG paths, no map library)
+scripts/rank.mjs         CLI landed-cost ranking
+data/                    markets, airports, VAT
+site/                    the app: map, filter pane, ranked results
+infra/                   terraform (empty)
 ```
+
+## The front end
+
+No framework, no build step, no mapping library. Three generated files drive it:
+
+| File | Built by | Contains |
+|---|---|---|
+| `matrix.json` | `matrix.mjs` | 21 markets x 32 SKUs: price, colour, capacity, per-store stock, reserve links |
+| `flights.json` | `build-flights.mjs` | round-trip fares + booking links for 5 origins |
+| `world.json` | `build-map.mjs` | 173 country paths, pre-projected to an equirectangular 1000x500 canvas |
+
+The map is plain SVG because a tile layer would mean an API key, a network dependency and a
+third-party request on every visit, for a picture that never needs to zoom.
+
+Availability is fetched **16 SKUs per request**. The endpoint accepts `parts.0..parts.N` but
+silently truncates — ask for 32 and you get 20 back with no error — so a 32-SKU catalog is
+2 calls, and a full 21-market refresh is about 60 requests rather than 672.
 
 ## Try it
 
