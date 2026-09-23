@@ -1,0 +1,12 @@
+node_modules/
+.env
+*.tfstate
+*.tfstate.backup
+*.tfvars
+.terraform/
+.DS_Store
+cache/
+.agents/
+.claude/
+.impeccable/
+skills-lock.json

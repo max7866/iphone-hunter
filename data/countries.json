@@ -1,0 +1,27 @@
+{
+  "_note": "simTray: does the iPhone 18 Pro / Pro Max sold here have a physical nano-SIM tray? iPhone Duo is eSIM-only worldwide, so simTray never applies to it. Source: Apple market policy, Sept 2026.",
+  "countries": [
+    { "cc": "sg", "name": "Singapore",      "currency": "SGD", "simTray": true,  "location": "238801" },
+    { "cc": "hk", "name": "Hong Kong",      "currency": "HKD", "simTray": true,  "location": "Central" },
+    { "cc": "uk", "name": "United Kingdom", "currency": "GBP", "simTray": true,  "location": "W1K 6WF" },
+    { "cc": "de", "name": "Germany",        "currency": "EUR", "simTray": true,  "location": "80331" },
+    { "cc": "fr", "name": "France",         "currency": "EUR", "simTray": true,  "location": "75001" },
+    { "cc": "es", "name": "Spain",          "currency": "EUR", "simTray": true,  "location": "28013" },
+    { "cc": "it", "name": "Italy",          "currency": "EUR", "simTray": true,  "location": "20121" },
+    { "cc": "nl", "name": "Netherlands",    "currency": "EUR", "simTray": true,  "location": "1012" },
+    { "cc": "ch", "name": "Switzerland",    "currency": "CHF", "simTray": true,  "location": "8001" },
+    { "cc": "tr", "name": "Turkey",         "currency": "TRY", "simTray": true,  "location": "34365" },
+    { "cc": "in", "name": "India",          "currency": "INR", "simTray": true,  "location": "400051" },
+    { "cc": "th", "name": "Thailand",       "currency": "THB", "simTray": true,  "location": "10330" },
+    { "cc": "my", "name": "Malaysia",       "currency": "MYR", "simTray": true,  "location": "50450" },
+    { "cc": "au", "name": "Australia",      "currency": "AUD", "simTray": true,  "location": "2000" },
+    { "cc": "kr", "name": "South Korea",    "currency": "KRW", "simTray": true,  "location": "06232" },
+    { "cc": "tw", "name": "Taiwan",         "currency": "TWD", "simTray": true,  "location": "110" },
+    { "cc": "ae", "name": "UAE",            "currency": "AED", "simTray": false, "location": "Dubai" },
+    { "cc": "sa", "name": "Saudi Arabia",   "currency": "SAR", "simTray": false, "location": "Riyadh" },
+    { "cc": "qa", "name": "Qatar",          "currency": "QAR", "simTray": false, "location": "Doha" },
+    { "cc": "jp", "name": "Japan",          "currency": "JPY", "simTray": false, "location": "100-0005" },
+    { "cc": "ca", "name": "Canada",         "currency": "CAD", "simTray": false, "location": "M5H" },
+    { "cc": "",   "name": "United States",  "currency": "USD", "simTray": false, "location": "22031" }
+  ]
+}

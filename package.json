@@ -1,0 +1,10 @@
+{
+  "name": "iphone-hunter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "probe": "node scripts/probe.mjs"
+  }
+}
