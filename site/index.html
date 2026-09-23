@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iPhone Hunter — the cheapest way to actually get one</title>
+<meta name="description" content="Find an iPhone 18 Pro in stock at Apple Stores worldwide, filter by colour, capacity and physical SIM tray, and rank by landed cost — device price plus the flight to go get it.">
+<meta name="theme-color" content="#14161A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="rule">Apple Store stock · worldwide · landed cost</p>
+    <h1>The phone isn't the price.<br><span class="hl">Getting to it is.</span></h1>
+    <p class="lede">
+      Availability trackers tell you where an iPhone is in stock. They don't tell you what it
+      costs to be standing in that shop. This ranks every Apple market by <strong>landed
+      cost</strong> — the device in local currency, minus any tax refund you'd actually
+      recover, plus the round-trip airfare from your airport.
+    </p>
+    <p class="lede">
+      It exists because of one specific problem: <strong>the US doesn't sell an iPhone 18 Pro
+      with a physical SIM tray.</strong> Neither do Canada, Japan, or the UAE. If you need
+      one, you have to leave — and the cheapest phone is rarely the cheapest trip.
+    </p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="board" aria-labelledby="live">
+    <div class="board__head">
+      <h2 id="live">Live right now</h2>
+      <p class="board__meta" id="meta">Loading…</p>
+    </div>
+
+    <div class="tablewrap">
+      <table id="table">
+        <thead>
+          <tr>
+            <th scope="col">Market</th>
+            <th scope="col" class="num">Device</th>
+            <th scope="col" class="num">Flight</th>
+            <th scope="col" class="num">Landed</th>
+            <th scope="col" class="num">In stock</th>
+          </tr>
+        </thead>
+        <tbody id="rows">
+          <tr><td colspan="5" class="empty">Loading live data…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="foot" id="baseline"></p>
+  </section>
+
+  <section class="cols">
+    <div>
+      <h3>Why the cheapest phone loses</h3>
+      <p id="inversion">
+        The cheapest phone on the board is rarely the cheapest trip. A market can undercut
+        everyone on the device and still lose once the airfare lands on top — while a
+        pricier one wins because it is close. That inversion is the entire point, and no
+        availability tracker can show it.
+      </p>
+    </div>
+    <div>
+      <h3>Airport stores count double</h3>
+      <p>
+        Some Apple Stores sit inside the terminal — Jewel Changi is one. For those routes a
+        layover can be enough: you never clear immigration, never book a hotel, never lose a
+        day. Stores inside an airport are marked <span class="tag">✈</span> above.
+      </p>
+    </div>
+    <div>
+      <h3>No invented savings</h3>
+      <p>
+        Tax refund rates are real money and vary by scheme, operator and minimum spend.
+        Where the scheme isn't verified against a source, this counts the refund as
+        <strong>zero</strong> rather than guessing. Two are settled: Hong Kong has no VAT at
+        all, and the UK abolished visitor refunds in 2021.
+      </p>
+    </div>
+  </section>
+
+  <section class="status">
+    <h3>Status</h3>
+    <p>
+      In development. The data layer is live across 22 Apple markets — catalog, local
+      pricing, per-store stock and reservation links — with real round-trip fares and
+      booking links. Still to come: the filter pane for colour, capacity and SIM tray, a
+      sourced tax-refund table, and any-airport origin selection.
+    </p>
+    <p class="fineprint">
+      Not affiliated with Apple. Stock and prices are read from Apple's public store pages
+      and cached; verify before you book anything.
+    </p>
+  </section>
+
+</main>
+
+<footer class="wrap">
+  <p>iPhone Hunter · built by <a href="https://github.com/max7866">max7866</a></p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

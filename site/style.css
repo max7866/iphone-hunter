@@ -1,0 +1,174 @@
+:root {
+  --paper:   #F4F4F1;
+  --panel:   #FFFFFF;
+  --ink:     #14161A;
+  --ink-2:   #555C66;
+  --line:    #DEDEDA;
+  --signal:  #0B4FE0;
+  --good:    #0A7B55;
+  --warn:    #9A5B00;
+  --best-bg: #EAF0FF;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper:   #101114;
+    --panel:   #16181D;
+    --ink:     #EEF0F3;
+    --ink-2:   #A2AAB6;
+    --line:    #262A31;
+    --signal:  #7FA6FF;
+    --good:    #56C79B;
+    --warn:    #E0A64B;
+    --best-bg: #17203A;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Archivo", system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+}
+
+::selection { background: var(--signal); color: #fff; }
+html { scrollbar-color: var(--ink-2) var(--paper); }
+a { color: var(--signal); text-underline-offset: 0.2em; }
+:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
+
+.wrap { width: min(100% - 2.5rem, 1080px); margin-inline: auto; }
+
+/* --- masthead --- */
+
+.masthead { padding-block: clamp(3rem, 8vw, 6rem) clamp(2rem, 5vw, 3.5rem); }
+
+.rule {
+  margin: 0 0 1.75rem;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+h1 {
+  margin: 0 0 1.5rem;
+  font-variation-settings: "wdth" 112, "wght" 800;
+  font-size: clamp(2.25rem, 6.5vw, 4.25rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.hl { color: var(--signal); }
+
+.lede { max-width: 62ch; margin: 0 0 1rem; color: var(--ink-2); font-size: clamp(1rem, 1.5vw, 1.125rem); }
+.lede strong { color: var(--ink); font-weight: 600; }
+
+/* --- board --- */
+
+.board {
+  margin-block: clamp(1.5rem, 4vw, 2.5rem);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+.board__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.board__head h2 {
+  margin: 0;
+  font-variation-settings: "wdth" 110, "wght" 700;
+  font-size: 1.125rem;
+  letter-spacing: -0.01em;
+}
+
+.board__meta { margin: 0; font-family: var(--mono); font-size: 0.75rem; color: var(--ink-2); }
+
+.tablewrap { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+
+th, td { padding: 0.7rem 1.5rem; text-align: left; white-space: nowrap; }
+
+thead th {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  border-bottom: 1px solid var(--line);
+}
+
+tbody tr + tr td { border-top: 1px solid var(--line); }
+tbody tr.best td { background: var(--best-bg); }
+tbody tr.dim td { color: var(--ink-2); }
+
+.num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+td.num { font-size: 0.875rem; }
+.landed { font-weight: 600; color: var(--ink); }
+.market { font-weight: 600; }
+
+.tag {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.3rem;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  color: var(--good);
+  vertical-align: 1px;
+}
+
+.est { color: var(--warn); }
+.empty { color: var(--ink-2); text-align: center; padding-block: 2.5rem; }
+.foot { margin: 0; padding: 1rem 1.5rem; border-top: 1px solid var(--line); font-size: 0.8125rem; color: var(--ink-2); }
+
+/* --- prose blocks --- */
+
+.cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: clamp(1.5rem, 4vw, 2.5rem);
+  margin-block: clamp(2.5rem, 6vw, 4rem);
+}
+
+.cols h3, .status h3 {
+  margin: 0 0 0.6rem;
+  font-variation-settings: "wdth" 108, "wght" 700;
+  font-size: 1.0625rem;
+}
+
+.cols p, .status p { margin: 0 0 0.75rem; color: var(--ink-2); font-size: 0.9375rem; }
+.cols strong, .status strong { color: var(--ink); font-weight: 600; }
+
+.status {
+  max-width: 68ch;
+  margin-block: 0 clamp(3rem, 7vw, 5rem);
+  padding-top: 2rem;
+  border-top: 1px solid var(--line);
+}
+
+.fineprint { font-size: 0.8125rem; }
+
+footer { padding-block: 1.5rem 3rem; border-top: 1px solid var(--line); }
+footer p { margin: 0; font-family: var(--mono); font-size: 0.75rem; color: var(--ink-2); }
+
+@media (max-width: 620px) {
+  th, td { padding-inline: 1rem; }
+}
