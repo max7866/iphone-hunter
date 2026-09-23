@@ -85,10 +85,26 @@ vendor:
 | Provider | Cost | Data |
 |---|---|---|
 | `estimateProvider` | free, no key | great-circle distance model. Ranking only; every result is flagged `estimate: true` so it can never be shown as a fare. |
-| `travelpayoutsProvider` | free token | cached cheapest fares from Aviasales search history (7-day cache). Affiliate model, so it pays us rather than costing us. |
+| `travelpayoutsProvider` | free token | real round-trip fares + booking deep links, from Aviasales search-history cache. **Live and wired.** |
 | Duffel | ~$0.005/search for us | real bookable fares. We never book flights, so the 1500:1 search-to-book allowance never applies and every search bills. |
 
-`api.travelpayouts.com` answers 401 without a token, confirming it is live.
+Wired and working. Two things worth knowing about the Travelpayouts API:
+
+- Use `aviasales/v3/prices_for_dates`, **not** `v1/prices/cheap`. v1 keys its response by
+  *city* code — ask for `LHR` and the data comes back under `LON`, so a naive lookup by the
+  code you passed silently returns nothing.
+- The cache is built from real user searches, so a specific month can be empty on thin
+  routes. The provider asks for the month, then falls back to any date, then to the
+  distance estimate, and labels which it used. A route never drops out of the ranking just
+  because nobody searched it lately.
+
+The distance estimator it replaced was wrong by a lot and in both directions: it guessed
+$1507 for IAD→BKK (real: $523) and $701 for IAD→MAD (real: $357), while *under*-estimating
+IAD→SYD at $1667 (real: $2296). Ranking on estimates would have been actively misleading.
+
+**Secrets:** `TRAVELPAYOUTS_TOKEN` lives in `.env`, which is gitignored. Run scripts with
+`node --env-file=.env …`. `TRAVELPAYOUTS_MARKER` (the affiliate marker, a different value
+from the API token) is still needed for booking links to earn commission.
 
 ## Open questions
 - Tourist VAT/GST refund rates — `data/vat.json` has standard VAT rates, but the refund

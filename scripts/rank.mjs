@@ -8,7 +8,7 @@
 import { readFileSync } from 'node:fs';
 import { fetchCatalog, fetchAvailability, politeSleep } from './apple.mjs';
 import { toUSD } from './fx.mjs';
-import { estimateProvider, travelpayoutsProvider, gatewayFor } from './flights.mjs';
+import { estimateProvider, travelpayoutsProvider, withFallback, gatewayFor } from './flights.mjs';
 
 const { countries } = JSON.parse(readFileSync(new URL('../data/countries.json', import.meta.url)));
 const vat = JSON.parse(readFileSync(new URL('../data/vat.json', import.meta.url))).countries;
@@ -27,7 +27,9 @@ const color = args.color ?? null;
 const needTray = args.tray === 'true' || args.tray === true;
 const inStockOnly = args.stock !== 'false';
 
-const provider = process.env.TRAVELPAYOUTS_TOKEN ? travelpayoutsProvider() : estimateProvider();
+const provider = process.env.TRAVELPAYOUTS_TOKEN
+  ? withFallback(travelpayoutsProvider(), estimateProvider())
+  : estimateProvider();
 
 function refundUSD(cc, priceUSD) {
   const v = vat[cc];
@@ -74,16 +76,28 @@ const ok = rows.filter((r) => !r.skipped).sort((a, b) => a.landed - b.landed);
 console.log(`\n${model} ${capacity}${color ? ' ' + color : ''} — from ${origin}` +
             `${needTray ? ', physical SIM tray only' : ''}   [fares: ${provider.name}${provider.estimate ? ', ESTIMATES' : ''}]\n`);
 console.log('  ' + 'market'.padEnd(15) + 'device'.padStart(9) + 'refund'.padStart(9) +
-            'flight'.padStart(9) + 'landed'.padStart(10) + '  stores');
+            'flight'.padStart(10) + 'landed'.padStart(10) + '  stores');
 for (const r of ok) {
   console.log(
     '  ' + r.c.name.padEnd(15) +
     ('$' + r.priceUSD.toFixed(0)).padStart(9) +
     (r.refund.applied ? '-$' + r.refund.usd.toFixed(0) : '—').padStart(9) +
-    ('$' + r.flight.usd).padStart(9) +
+    ('$' + r.flight.usd + (r.flight.estimate ? '~' : '')).padStart(10) +
     ('$' + r.landed.toFixed(0)).padStart(10) +
-    `  ${r.open.length} in stock${r.airport ? ' (airport store)' : ''}`
+    `  ${r.open.length} in stock${r.airport ? ' ✈ airport store' : ''}` +
+    (r.flight.airline ? `  ${r.flight.airline}` : '')
   );
 }
 const none = rows.filter((r) => r.skipped);
 if (none.length) console.log(`\n  no stock today: ${none.map((r) => r.c.name).join(', ')}`);
+
+const best = ok[0];
+if (best) {
+  console.log(`\n  Best: ${best.c.name} — ${best.sku.model} ${best.sku.capacity} ${best.sku.color}`);
+  console.log(`    device $${best.priceUSD.toFixed(0)} + flight $${best.flight.usd} = $${best.landed.toFixed(0)} landed`);
+  if (best.flight.link) console.log(`    flight:  ${best.flight.link.slice(0, 95)}`);
+  const store = best.open.find((s) => s.airport) ?? best.open[0];
+  if (store?.reserveUrl) console.log(`    reserve: ${store.storeName} — ${store.reserveUrl}`);
+  if (best.flight.estimate) console.log('    NOTE: fare is a distance estimate, not a quote.');
+}
+console.log('\n  ~ = estimated fare. Refund shown only where the scheme is verified; blanks are conservative.');

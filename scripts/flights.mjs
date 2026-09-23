@@ -48,28 +48,86 @@ export function estimateProvider() {
   };
 }
 
-/** Travelpayouts Data API — free token, cached cheapest fares. Set TRAVELPAYOUTS_TOKEN. */
+/**
+ * Travelpayouts — free token, cached fares from Aviasales search history.
+ *
+ * Uses aviasales/v3/prices_for_dates, not v1/prices/cheap: v3 returns a flat array with
+ * round-trip prices, transfer counts and a booking deep link. v1 keys its response by
+ * CITY code (LHR comes back under "LON"), which silently yields nothing if you look up
+ * the airport code you passed in.
+ *
+ * `link` is relative and needs the aviasales host plus your affiliate marker to earn
+ * commission; without TRAVELPAYOUTS_MARKER it still works as a plain search link.
+ */
 export function travelpayoutsProvider(token = process.env.TRAVELPAYOUTS_TOKEN) {
   const cache = fileCache({ ttl: 12 * 3600 });
+  const marker = process.env.TRAVELPAYOUTS_MARKER;
+
   return {
     name: 'travelpayouts',
     estimate: false,
-    async roundTrip(origin, dest) {
+    async roundTrip(origin, dest, { month } = {}) {
       if (!token) throw new Error('TRAVELPAYOUTS_TOKEN not set');
       if (origin === dest) return { usd: 0, estimate: false, note: 'already there' };
-      const key = `tp:${origin}:${dest}`;
+
+      const when = month ?? new Date().toISOString().slice(0, 7);
+      const key = `tp3:${origin}:${dest}:${when}`;
+
       const { value } = await cached(cache, key, async () => {
-        const url =
-          `https://api.travelpayouts.com/v1/prices/cheap?origin=${origin}&destination=${dest}&currency=usd`;
-        const res = await fetch(url, { headers: { 'X-Access-Token': token } });
-        if (!res.ok) throw new Error(`travelpayouts ${res.status}`);
-        const json = await res.json();
-        const offers = Object.values(json?.data?.[dest] ?? {});
-        const cheapest = offers.map((o) => o.price).filter(Boolean).sort((a, b) => a - b)[0];
-        return cheapest ? { usd: cheapest, estimate: false } : null;
+        // The cache is built from real Aviasales searches, so a specific month can be
+        // empty on thin routes. Ask for the month, then fall back to any date rather
+        // than reporting the route as unavailable.
+        const call = async (qs) => {
+          const res = await fetch(
+            'https://api.travelpayouts.com/aviasales/v3/prices_for_dates' +
+              `?origin=${origin}&destination=${dest}&currency=usd&one_way=false` +
+              `&sorting=price&limit=5${qs}`,
+            { headers: { 'X-Access-Token': token } }
+          );
+          if (!res.ok) throw new Error(`travelpayouts ${res.status}`);
+          return ((await res.json())?.data ?? []).filter((r) => r.price);
+        };
+
+        let rows = await call(`&departure_at=${when}`);
+        let windowed = true;
+        if (!rows.length) { rows = await call(''); windowed = false; }
+        if (!rows.length) return null;
+        const best = rows.sort((a, b) => a.price - b.price)[0];
+        return {
+          usd: best.price,
+          estimate: false,
+          anyDate: !windowed,
+          airline: best.airline ?? null,
+          transfers: best.transfers ?? null,
+          departure: best.departure_at ?? null,
+          ret: best.return_at ?? null,
+          link: best.link
+            ? `https://www.aviasales.com${best.link}${marker ? `&marker=${marker}` : ''}`
+            : null,
+        };
       });
+
       if (!value) throw new Error(`no fare data ${origin}->${dest}`);
       return value;
+    },
+  };
+}
+
+/** Try providers in order; the first that answers wins. Keeps a thin route from
+ *  dropping out of the ranking entirely just because nobody has searched it lately. */
+export function withFallback(...providers) {
+  return {
+    name: providers.map((p) => p.name).join('+'),
+    estimate: providers.every((p) => p.estimate),
+    async roundTrip(origin, dest, opts) {
+      let lastErr;
+      for (const p of providers) {
+        try {
+          const r = await p.roundTrip(origin, dest, opts);
+          return { ...r, via: p.name };
+        } catch (e) { lastErr = e; }
+      }
+      throw lastErr ?? new Error('no provider answered');
     },
   };
 }
