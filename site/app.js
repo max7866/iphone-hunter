@@ -16,7 +16,7 @@ async function render() {
     if (!res.ok) throw new Error(res.status);
     snap = await res.json();
   } catch {
-    rowsEl.innerHTML = '<tr><td colspan="5" class="empty">Live data unavailable right now.</td></tr>';
+    rowsEl.innerHTML = '<tr><td colspan="6" class="empty">Live data unavailable right now.</td></tr>';
     return;
   }
 
@@ -35,7 +35,11 @@ async function render() {
       `<td class="num">${fmt(r.priceUSD)}</td>` +
       `<td class="num${r.flightEstimate ? ' est' : ''}">${fmt(r.flightUSD)}${r.flightEstimate ? '~' : ''}</td>` +
       `<td class="num landed">${fmt(r.landed)}</td>` +
-      `<td class="num">${r.inStock} of ${r.totalStores}</td>`;
+      `<td class="num">${r.inStock} of ${r.totalStores}</td>` +
+      `<td class="go">` +
+        (r.flightLink ? `<a href="${r.flightLink}" target="_blank" rel="noopener sponsored">flight</a>` : '') +
+        (r.reserveUrl ? `<a href="${r.reserveUrl}" target="_blank" rel="noopener">store</a>` : '') +
+      `</td>`;
     rowsEl.append(tr);
   });
 
@@ -47,7 +51,7 @@ async function render() {
       `<td class="num">${fmt(r.priceUSD)}</td>` +
       `<td class="num">${r.flightUSD != null ? fmt(r.flightUSD) : '—'}</td>` +
       `<td class="num">—</td>` +
-      `<td class="num">none today</td>`;
+      `<td class="num">none today</td><td class="go"></td>`;
     rowsEl.append(tr);
   });
 

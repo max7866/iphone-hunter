@@ -31,6 +31,7 @@ for (const c of countries.filter((x) => x.simTray)) {
     const dest = gatewayFor(c.cc);
     let flight = null;
     try { flight = dest ? await provider.roundTrip(ORIGIN, dest) : null; } catch {}
+    const store = open.find((x) => x.airport) ?? open[0] ?? null;
     rows.push({
       market: c.name, cc: c.cc, currency: c.currency,
       localPrice: sku.price, priceUSD: Math.round(priceUSD),
@@ -45,6 +46,9 @@ for (const c of countries.filter((x) => x.simTray)) {
       airportStore: open.some((s) => s.airport),
       vatRate: vat[c.cc]?.vatRate ?? null,
       refundVerified: vat[c.cc]?.verified ?? false,
+      flightLink: flight?.link ?? null,
+      storeName: store?.storeName ?? null,
+      reserveUrl: store?.reserveUrl ?? null,
     });
     process.stderr.write(`  ${c.name}: ${open.length}/${stores.length} in stock\n`);
   } catch (e) {

@@ -101,14 +101,19 @@ export function travelpayoutsProvider(token = process.env.TRAVELPAYOUTS_TOKEN) {
           transfers: best.transfers ?? null,
           departure: best.departure_at ?? null,
           ret: best.return_at ?? null,
-          link: best.link
-            ? `https://www.aviasales.com${best.link}${marker ? `&marker=${marker}` : ''}`
-            : null,
+          // Store the raw path only. The affiliate marker is applied on read, so a
+          // cached fare written before the marker existed still earns commission.
+          linkPath: best.link ?? null,
         };
       });
 
       if (!value) throw new Error(`no fare data ${origin}->${dest}`);
-      return value;
+      return {
+        ...value,
+        link: value.linkPath
+          ? `https://www.aviasales.com${value.linkPath}${marker ? `&marker=${marker}` : ''}`
+          : null,
+      };
     },
   };
 }

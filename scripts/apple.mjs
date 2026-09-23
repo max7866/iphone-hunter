@@ -74,7 +74,8 @@ export async function fetchAvailability(cc, partNumber, location) {
       country: s.country,
       available: pa.pickupDisplay === 'available',
       quote: pa.pickupSearchQuote ?? null,
-      reserveUrl: s.makeReservationUrl ?? s.reservationUrl ?? null,
+      // Apple hands these back as http://; upgrade so an https page links out cleanly.
+      reserveUrl: (s.makeReservationUrl ?? s.reservationUrl ?? null)?.replace(/^http:/, 'https:') ?? null,
       // an airport store means a layover may be enough — no immigration, no city trip
       airport: /airport|changi|jewel/i.test(s.storeName ?? ''),
     };
