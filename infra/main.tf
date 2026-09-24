@@ -65,9 +65,21 @@ variable "allowed_origins" {
 }
 
 variable "github_repo" {
-  description = "owner/name of the repo allowed to deploy via OIDC."
+  description = "owner/name of the repo allowed to deploy via OIDC (classic subject form)."
   type        = string
   default     = "max7866/iphone-hunter"
+}
+
+variable "github_owner_id" {
+  description = "owner@id as it appears in GitHub's immutable OIDC subject."
+  type        = string
+  default     = "max7866@65424930"
+}
+
+variable "github_repo_id" {
+  description = "name@id as it appears in GitHub's immutable OIDC subject."
+  type        = string
+  default     = "iphone-hunter@1384198180"
 }
 
 locals {

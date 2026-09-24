@@ -25,10 +25,21 @@ data "aws_iam_policy_document" "github_assume" {
 
     # Only this repository, and only its own branches — not forks, not pull_request
     # builds from anyone who opens a PR.
+    #
+    # GitHub now issues IMMUTABLE, ID-BASED subjects for newer repositories:
+    #   repo:owner@<ownerId>/name@<repoId>:ref:refs/heads/main
+    # rather than the classic `repo:owner/name:ref:...`. A policy written only against
+    # the classic form fails with a bare "Not authorized to perform
+    # sts:AssumeRoleWithWebIdentity" and no hint as to why. Both forms are matched here:
+    # the ID form is the one actually issued today and survives a rename, the classic
+    # form keeps this working for repos that still get it.
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repo}:*"]
+      values = [
+        "repo:${var.github_repo}:ref:refs/heads/*",
+        "repo:${var.github_owner_id}/${var.github_repo_id}:ref:refs/heads/*",
+      ]
     }
   }
 }
