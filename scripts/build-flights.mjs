@@ -4,11 +4,14 @@
 
 import { writeFile } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { estimateProvider, travelpayoutsProvider, withFallback, gatewayFor } from './flights.mjs';
+import { dataFile } from './paths.mjs';
 
-const { countries } = JSON.parse(readFileSync(new URL('../data/countries.json', import.meta.url)));
-const { airports } = JSON.parse(readFileSync(new URL('../data/airports.json', import.meta.url)));
+const { countries } = JSON.parse(readFileSync(dataFile('countries.json')));
+const { airports } = JSON.parse(readFileSync(dataFile('airports.json')));
 
+export async function buildFlights() {
 const ORIGINS = (process.env.ORIGINS ?? 'IAD,JFK,DXB,KBL,LHR').split(',');
 const provider = process.env.TRAVELPAYOUTS_TOKEN
   ? withFallback(travelpayoutsProvider(), estimateProvider())
@@ -37,5 +40,11 @@ for (const origin of ORIGINS) {
   process.stderr.write(`  ${origin} (${airports[origin].city}): ${priced.length} routes priced\n`);
 }
 
-await writeFile(new URL('../site/data/flights.json', import.meta.url), JSON.stringify(out));
-console.log(`wrote ${Object.keys(out.origins).length} origins`);
+  return out;
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  const out = await buildFlights();
+  await writeFile(new URL('../site/data/flights.json', import.meta.url), JSON.stringify(out));
+  console.log(`wrote ${Object.keys(out.origins).length} origins`);
+}

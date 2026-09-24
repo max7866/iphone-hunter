@@ -49,14 +49,43 @@ Both endpoints are undocumented and may change without notice. They are also not
 bulk automated access, so the architecture caches server-side: Apple should see roughly one
 request per (part number, location) per refresh window no matter how many visitors we have.
 
-## Architecture (agreed)
+## Architecture
 
-- **Public site**, static front end on S3 + CloudFront, same pattern as `wc2026-predictions`.
-- **Lambda** for Apple queries and flight lookups; **DynamoDB** as the cache and the thing
-  that shields Apple from public traffic.
-- **Live flight prices** via a *pluggable* provider (see below — Amadeus is gone).
-- **User picks any origin airport** — needs an IATA airport dataset.
-- Terraform for all infrastructure.
+The site is served from GitHub Pages; AWS owns the **data plane**. A visitor never reaches
+Apple — the scheduled Lambda is the only thing that does.
+
+```
+EventBridge (every 6h)
+      |
+      v
+  Lambda  --(cache reads/writes)-->  DynamoDB
+      |                                 ^
+      | Apple + Travelpayouts ----------'
+      v
+     S3  <-- OAC --  CloudFront  <--  the site (GitHub Pages)
+```
+
+| Resource | Why |
+|---|---|
+| `iphone-hunter-cache` (DynamoDB) | One request per (key, window) to Apple regardless of build frequency. TTL reaps rows; freshness is enforced in code. |
+| `iphone-hunter-data-*` (S3) | Private, OAC-only. Holds `matrix.json` and `flights.json`. |
+| CloudFront | HTTPS + CORS for the GitHub Pages origin. A CloudFront Function answers preflight at the edge because S3 behind OAC cannot. |
+| `iphone-hunter-refresh` (Lambda) | Node 20, arm64, 600s. A full run is ~60 polite Apple requests and takes about 165s. |
+| `iphone-hunter-deploy` (IAM role) | Assumed by GitHub Actions via OIDC. No long-lived AWS keys exist. |
+
+State lives in S3 with native lockfile locking. `infra/bootstrap/` creates that bucket and
+is the one thing applied with local state — it cannot live inside the state it stores.
+
+### Deploying
+
+Everything is Terraform, applied by CI on push to `main`. To run it by hand:
+
+```bash
+export TF_VAR_travelpayouts_token=...   # never a .tfvars file
+terraform -chdir=infra apply
+node scripts/build-lambda.mjs           # before apply, if Lambda code changed
+node scripts/invoke-refresh.mjs         # refresh now instead of waiting for the schedule
+```
 
 ## Layout
 

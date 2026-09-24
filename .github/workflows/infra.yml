@@ -1,0 +1,94 @@
+name: Infrastructure
+
+on:
+  push:
+    branches: [main]
+    paths: ['infra/**', 'lambda/**', 'scripts/**', 'data/**', '.github/workflows/infra.yml']
+  pull_request:
+    paths: ['infra/**', 'lambda/**', 'scripts/**', 'data/**']
+  workflow_dispatch:
+    inputs:
+      refresh:
+        description: 'Invoke the refresher after applying'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write        # required to assume the deploy role via OIDC
+  pull-requests: write
+
+concurrency:
+  group: infra           # never let two applies race for the state lock
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+  TF_IN_AUTOMATION: 'true'
+  TF_INPUT: '0'
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # The function bundles shared build logic, so it must be assembled before
+      # Terraform hashes it — otherwise a code change deploys nothing.
+      - name: Build Lambda bundle
+        run: node scripts/build-lambda.mjs
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.15.0'
+
+      - name: Format check
+        run: terraform -chdir=infra fmt -check -recursive
+
+      - name: Init
+        run: terraform -chdir=infra init -input=false
+
+      - name: Validate
+        run: terraform -chdir=infra validate
+
+      - name: Plan
+        id: plan
+        env:
+          TF_VAR_travelpayouts_token: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
+          TF_VAR_travelpayouts_marker: ${{ secrets.TRAVELPAYOUTS_MARKER }}
+        run: terraform -chdir=infra plan -input=false -out=tfplan -no-color
+
+      - name: Comment plan on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const out = execSync('terraform -chdir=infra show -no-color tfplan').toString();
+            const body = '### Terraform plan\n```\n' + out.slice(-60000) + '\n```';
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body,
+            });
+
+      - name: Apply
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          TF_VAR_travelpayouts_token: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
+          TF_VAR_travelpayouts_marker: ${{ secrets.TRAVELPAYOUTS_MARKER }}
+        run: terraform -chdir=infra apply -input=false -auto-approve tfplan
+
+      - name: Refresh data
+        if: github.event_name == 'workflow_dispatch' && inputs.refresh
+        run: npm ci --no-audit --no-fund && node scripts/invoke-refresh.mjs

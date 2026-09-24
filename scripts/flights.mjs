@@ -10,10 +10,11 @@
 //   (duffel)             real bookable fares, ~$0.005/search for us since we never book.
 
 import { readFileSync } from 'node:fs';
-import { fileCache, cached } from './cache.mjs';
+import { makeCache, cached } from './cache.mjs';
+import { dataFile } from './paths.mjs';
 
 const { airports, marketGateway } = JSON.parse(
-  readFileSync(new URL('../data/airports.json', import.meta.url))
+  readFileSync(dataFile('airports.json'))
 );
 
 const R = 6371;
@@ -60,7 +61,7 @@ export function estimateProvider() {
  * commission; without TRAVELPAYOUTS_MARKER it still works as a plain search link.
  */
 export function travelpayoutsProvider(token = process.env.TRAVELPAYOUTS_TOKEN) {
-  const cache = fileCache({ ttl: 12 * 3600 });
+  const cache = makeCache({ ttl: 12 * 3600 });
   const marker = process.env.TRAVELPAYOUTS_MARKER;
 
   return {

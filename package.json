@@ -3,8 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "probe": "node scripts/probe.mjs"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-lambda": "^3.1139.0"
   }
 }

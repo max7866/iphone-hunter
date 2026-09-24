@@ -1,3 +1,7 @@
+// Live data comes from CloudFront, refreshed on a schedule by the Lambda. Apple is never
+// touched by a visitor. world.json is static geometry and ships with the site.
+const DATA_BASE = 'https://dmhxb71ukzv9s.cloudfront.net';
+
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => '$' + Math.round(n).toLocaleString('en-US');
 
@@ -27,9 +31,9 @@ let DATA, FLIGHTS, WORLD;
 
 async function load() {
   const [m, f, w] = await Promise.all([
-    fetch('data/matrix.json', { cache: 'no-cache' }).then((r) => r.json()),
-    fetch('data/flights.json', { cache: 'no-cache' }).then((r) => r.json()),
-    fetch('data/world.json', { cache: 'no-cache' }).then((r) => r.json()),
+    fetch(`${DATA_BASE}/matrix.json`).then((r) => r.json()),
+    fetch(`${DATA_BASE}/flights.json`).then((r) => r.json()),
+    fetch('data/world.json').then((r) => r.json()),
   ]);
   DATA = m; FLIGHTS = f; WORLD = w;
 }

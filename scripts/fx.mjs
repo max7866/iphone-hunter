@@ -7,9 +7,9 @@
 // AED/SAR/QAR are hard USD pegs (3.6725 / 3.75 / 3.64) and the live feed agrees, so a
 // stale rate for those is harmless.
 
-import { fileCache, cached } from './cache.mjs';
+import { makeCache, cached } from './cache.mjs';
 
-const cache = fileCache({ ttl: 6 * 3600 });
+const cache = makeCache({ ttl: 6 * 3600 });
 
 export async function usdRates() {
   const { value } = await cached(cache, 'fx:usd', async () => {

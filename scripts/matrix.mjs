@@ -3,14 +3,19 @@
 
 import { writeFile, mkdir } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { fetchCatalog, fetchAvailabilityBatch, politeSleep } from './apple.mjs';
 import { toUSD } from './fx.mjs';
 import { estimateProvider, travelpayoutsProvider, withFallback, gatewayFor } from './flights.mjs';
+import { dataFile } from './paths.mjs';
 
-const { countries } = JSON.parse(readFileSync(new URL('../data/countries.json', import.meta.url)));
-const { airports } = JSON.parse(readFileSync(new URL('../data/airports.json', import.meta.url)));
-const vat = JSON.parse(readFileSync(new URL('../data/vat.json', import.meta.url))).countries;
+const { countries } = JSON.parse(readFileSync(dataFile('countries.json')));
+const { airports } = JSON.parse(readFileSync(dataFile('airports.json')));
+const vat = JSON.parse(readFileSync(dataFile('vat.json'))).countries;
 
+const log = (m) => process.stderr.write(m);
+
+export async function buildMatrix() {
 const ORIGIN = process.env.SNAPSHOT_ORIGIN ?? 'IAD';
 const provider = process.env.TRAVELPAYOUTS_TOKEN
   ? withFallback(travelpayoutsProvider(), estimateProvider())
@@ -22,7 +27,7 @@ const allColors = new Set(), allCaps = new Set(), allModels = new Set();
 for (const c of countries) {
   try {
     const cat = await fetchCatalog(c.cc);
-    if (!cat.length) { process.stderr.write(`  ${c.name}: empty catalog\n`); continue; }
+    if (!cat.length) { log(`  ${c.name}: empty catalog\n`); continue; }
     await politeSleep();
 
     const avail = await fetchAvailabilityBatch(c.cc, cat.map((p) => p.partNumber), c.location);
@@ -68,9 +73,9 @@ for (const c of countries) {
       skus,
     };
     const inStock = skus.filter((s) => s.stores > 0).length;
-    process.stderr.write(`  ${c.name.padEnd(15)} ${skus.length} SKUs, ${inStock} in stock\n`);
+    log(`  ${c.name.padEnd(15)} ${skus.length} SKUs, ${inStock} in stock\n`);
   } catch (e) {
-    process.stderr.write(`  ${c.name}: ${e.message}\n`);
+    log(`  ${c.name}: ${e.message}\n`);
   }
   await politeSleep();
 }
@@ -88,8 +93,15 @@ const out = {
   markets,
 };
 
-await mkdir(new URL('../site/data/', import.meta.url), { recursive: true });
-await writeFile(new URL('../site/data/matrix.json', import.meta.url), JSON.stringify(out));
-const n = Object.keys(markets).length;
-const total = Object.values(markets).reduce((a, m) => a + m.skus.length, 0);
-console.log(`\nwrote ${n} markets, ${total} SKU rows`);
+  return out;
+}
+
+// CLI: write to site/data. In Lambda the caller ships it to S3 instead.
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  const out = await buildMatrix();
+  await mkdir(new URL('../site/data/', import.meta.url), { recursive: true });
+  await writeFile(new URL('../site/data/matrix.json', import.meta.url), JSON.stringify(out));
+  const n = Object.keys(out.markets).length;
+  const total = Object.values(out.markets).reduce((a, m) => a + m.skus.length, 0);
+  console.log(`\nwrote ${n} markets, ${total} SKU rows`);
+}

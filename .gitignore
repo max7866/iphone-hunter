@@ -10,3 +10,11 @@ cache/
 .claude/
 .impeccable/
 skills-lock.json
+
+# terraform
+.terraform/
+.terraform.lock.hcl
+*.tfplan
+tfplan
+infra/.build/
+lambda/build/
