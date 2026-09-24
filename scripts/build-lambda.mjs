@@ -10,7 +10,9 @@ await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
 
 // handler
-await cp(new URL('lambda/src/index.mjs', root), new URL('index.mjs', out));
+for (const f of ['index.mjs', 'check.mjs']) {
+  await cp(new URL(`lambda/src/${f}`, root), new URL(f, out));
+}
 
 // shared build logic
 for (const f of ['apple.mjs', 'cache.mjs', 'fx.mjs', 'flights.mjs', 'matrix.mjs', 'build-flights.mjs', 'paths.mjs']) {

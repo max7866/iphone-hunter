@@ -261,3 +261,15 @@ select {
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition-duration: 0.01ms !important; }
 }
+
+.livebtn {
+  padding: 0.28rem 0.55rem; border: 1px solid var(--line-2); border-radius: 6px;
+  background: transparent; font-family: var(--mono); font-size: 0.68rem; color: var(--ink-2);
+  cursor: pointer; white-space: nowrap;
+  transition: border-color 160ms var(--ease), color 160ms var(--ease);
+}
+.livebtn:hover:not(:disabled) { border-color: var(--yes); color: var(--yes); }
+.livebtn:disabled { opacity: 0.7; cursor: progress; }
+.livebtn--done { border-color: var(--yes); color: var(--yes); }
+.livebtn--fail { border-color: var(--warn); color: var(--warn); }
+.card--gone .metric__v.big { text-decoration: line-through; opacity: 0.6; }

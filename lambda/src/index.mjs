@@ -11,15 +11,15 @@ import { buildFlights } from './build-flights.mjs';
 const s3 = new S3Client({});
 const BUCKET = process.env.DATA_BUCKET;
 
-async function put(key, body) {
+async function put(key, body, maxAge = 60) {
   await s3.send(new PutObjectCommand({
     Bucket: BUCKET,
     Key: key,
     Body: JSON.stringify(body),
     ContentType: 'application/json',
-    // Short browser cache, longer at the edge: a refresh invalidates nothing, it just
-    // becomes visible on the next edge revalidation.
-    CacheControl: 'public, max-age=300, s-maxage=1800',
+    // The edge TTL is the real ceiling on freshness: refreshing more often than
+    // s-maxage changes nothing a visitor can see. Keep them equal and short.
+    CacheControl: `public, max-age=${maxAge}, s-maxage=${maxAge}`,
   }));
 }
 
@@ -29,15 +29,17 @@ export const handler = async (event) => {
   const done = {};
 
   try {
-    if (!only || only === 'flights') {
+    // Fares move slowly and cost an upstream call each, so they refresh on their own
+    // slow schedule rather than riding along with every stock run.
+    if (only === 'flights' || only === 'all') {
       const flights = await buildFlights();
-      await put('flights.json', flights);
+      await put('flights.json', flights, 1800);
       done.flights = Object.keys(flights.origins).length;
     }
 
-    if (!only || only === 'matrix') {
+    if (!only || only === 'matrix' || only === 'all') {
       const matrix = await buildMatrix();
-      await put('matrix.json', matrix);
+      await put('matrix.json', matrix, 60);
       done.markets = Object.keys(matrix.markets).length;
       done.skus = Object.values(matrix.markets).reduce((a, m) => a + m.skus.length, 0);
     }

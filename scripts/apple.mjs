@@ -13,7 +13,14 @@ const UA =
 
 const base = (cc) => `https://www.apple.com${cc ? '/' + cc : ''}`;
 
+import { makeCache, cached } from './cache.mjs';
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Catalogs change when Apple changes prices or line-up — rarely. Availability changes by
+// the minute. Caching the catalog separately is what makes a fast stock refresh cheap:
+// it drops a full run from ~63 requests to ~42.
+const catalogCache = makeCache({ ttl: 3600 });
 
 async function get(url, referer) {
   const res = await fetch(url, {
@@ -33,6 +40,13 @@ const NAME_RE =
 
 /** Catalog for one country: every buyable SKU with local price, capacity and colour. */
 export async function fetchCatalog(cc, family = 'iphone-18-pro') {
+  const { value } = await cached(catalogCache, `catalog:${cc}:${family}`, () =>
+    fetchCatalogUncached(cc, family)
+  );
+  return value;
+}
+
+async function fetchCatalogUncached(cc, family) {
   const url = `${base(cc)}/shop/buy-iphone/${family}`;
   const html = await (await get(url)).text();
 

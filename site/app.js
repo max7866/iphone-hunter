@@ -1,6 +1,10 @@
 // Live data comes from CloudFront, refreshed on a schedule by the Lambda. Apple is never
 // touched by a visitor. world.json is static geometry and ships with the site.
 const DATA_BASE = 'https://dmhxb71ukzv9s.cloudfront.net';
+// On-demand live lookup for one market. The board is refreshed every 10 minutes in the
+// background; this answers "right now" for the row someone actually cares about.
+const CHECK_URL = 'https://eh5pj5m6yaecddocd2b3quysrm0nlxwu.lambda-url.us-east-1.on.aws/';
+const POLL_MS = 60_000;
 
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => '$' + Math.round(n).toLocaleString('en-US');
@@ -206,11 +210,16 @@ function render() {
         `<div class="go">` +
           (r.flight?.link ? `<a href="${r.flight.link}" target="_blank" rel="noopener sponsored">flight</a>` : '') +
           (r.sku.reserveUrl ? `<a href="${r.sku.reserveUrl}" target="_blank" rel="noopener">store</a>` : '') +
+          `<button type="button" class="livebtn" data-cc="${r.cc}" title="Check Apple right now">live</button>` +
         `</div>` +
         `</li>`
       );
     })
     .join('');
+
+  cards.querySelectorAll('.livebtn').forEach((b) =>
+    b.addEventListener('click', (e) => { e.stopPropagation(); liveCheck(b); })
+  );
 
   cards.querySelectorAll('.card').forEach((el) => {
     el.addEventListener('mouseenter', () => {
@@ -244,6 +253,63 @@ function render() {
     `scheme is verified, so totals are conservative.`;
 
   drawPins(rows);
+}
+
+/* ---------- live ---------- */
+
+async function liveCheck(btn) {
+  const cc = btn.dataset.cc;
+  const card = btn.closest('.card');
+  btn.disabled = true;
+  btn.textContent = '…';
+  try {
+    const url =
+      `${CHECK_URL}?cc=${encodeURIComponent(cc)}` +
+      `&model=${encodeURIComponent(state.model)}&capacity=${encodeURIComponent(state.capacity)}` +
+      (state.colors.size === 1 ? `&color=${encodeURIComponent([...state.colors][0])}` : '');
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(res.status);
+    const live = await res.json();
+
+    const stocked = live.skus.filter((s) => s.stores > 0);
+    const total = stocked.reduce((a, s) => a + s.stores, 0);
+
+    // Write the live answer straight into the row rather than waiting for the next poll.
+    const metric = card.querySelectorAll('.metric')[2];
+    card.classList.toggle('card--gone', total === 0);
+    btn.textContent = total > 0 ? `${total} now` : 'none now';
+    btn.classList.add('livebtn--done');
+    if (metric) metric.querySelector('.metric__v').title = `checked ${new Date(live.checkedAt).toLocaleTimeString()}`;
+  } catch {
+    btn.textContent = 'failed';
+    btn.classList.add('livebtn--fail');
+  } finally {
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = 'live';
+      btn.classList.remove('livebtn--done', 'livebtn--fail');
+    }, 6000);
+  }
+}
+
+function stamp() {
+  if (!DATA) return;
+  const secs = Math.round((Date.now() - new Date(DATA.generatedAt)) / 1000);
+  const ago = secs < 90 ? `${secs}s` : secs < 5400 ? `${Math.round(secs / 60)} min` : `${Math.round(secs / 3600)}h`;
+  $('stamp').textContent = `${Object.keys(DATA.markets).length} markets · updated ${ago} ago`;
+}
+
+async function poll() {
+  try {
+    const res = await fetch(`${DATA_BASE}/matrix.json`);
+    if (!res.ok) return;
+    const next = await res.json();
+    if (next.generatedAt === DATA.generatedAt) return stamp();
+    DATA = next;
+    render();
+  } catch {
+    /* a failed poll just means the board stays as it is */
+  }
 }
 
 /* ---------- controls ---------- */
@@ -314,10 +380,12 @@ function buildControls() {
     $('cards').innerHTML = '<li class="empty"><b>Could not load live data.</b>Try a refresh.</li>';
     return;
   }
-  const mins = Math.round((Date.now() - new Date(DATA.generatedAt)) / 60000);
-  $('stamp').textContent =
-    `${Object.keys(DATA.markets).length} markets · updated ${mins < 60 ? mins + ' min' : Math.round(mins / 60) + 'h'} ago`;
   drawWorld();
   buildControls();
   render();
+  stamp();
+  setInterval(stamp, 5000);
+  setInterval(poll, POLL_MS);
+  // Coming back to a tab that has been open for hours should not show stale numbers.
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
 })();

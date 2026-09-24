@@ -48,8 +48,19 @@ variable "travelpayouts_marker" {
   default     = ""
 }
 
-variable "refresh_schedule" {
-  description = "How often the refresher runs. Apple's endpoints are undocumented and not meant for bulk access, so this stays conservative."
+variable "stock_schedule" {
+  description = <<-EOT
+    How often stock is refreshed. A run is ~42 requests to Apple once the catalog is
+    cached, so 10 minutes averages about 4 requests a minute — roughly what a handful of
+    real shoppers generate. Going much below this stops being polite to an undocumented
+    endpoint and risks being blocked outright.
+  EOT
+  type        = string
+  default     = "rate(10 minutes)"
+}
+
+variable "flights_schedule" {
+  description = "How often fares refresh. They move slowly and each costs an upstream call."
   type        = string
   default     = "rate(6 hours)"
 }

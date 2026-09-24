@@ -70,11 +70,36 @@ EventBridge (every 6h)
 | `iphone-hunter-cache` (DynamoDB) | One request per (key, window) to Apple regardless of build frequency. TTL reaps rows; freshness is enforced in code. |
 | `iphone-hunter-data-*` (S3) | Private, OAC-only. Holds `matrix.json` and `flights.json`. |
 | CloudFront | HTTPS + CORS for the GitHub Pages origin. A CloudFront Function answers preflight at the edge because S3 behind OAC cannot. |
-| `iphone-hunter-refresh` (Lambda) | Node 20, arm64, 600s. A full run is ~60 polite Apple requests and takes about 165s. |
+| `iphone-hunter-refresh` (Lambda) | Node 20, arm64, 600s. A run is ~42 requests once the catalog is cached, taking about 165s. |
+| `iphone-hunter-check` (Lambda + Function URL) | On-demand live availability for one market, 45s cache. Idle costs nothing; a person hammering the button costs Apple one request. |
 | `iphone-hunter-deploy` (IAM role) | Assumed by GitHub Actions via OIDC. No long-lived AWS keys exist. |
 
 State lives in S3 with native lockfile locking. `infra/bootstrap/` creates that bucket and
 is the one thing applied with local state — it cannot live inside the state it stores.
+
+### How fresh is it
+
+Two cadences, because stock and fares move at different speeds:
+
+| What | Every | Why |
+|---|---|---|
+| Stock + pricing | 10 min | ~42 requests a run, about 4 a minute averaged — roughly what a handful of real shoppers generate |
+| Fares | 6 hours | They move slowly and each costs an upstream call |
+| Live check | on demand | Only for the market someone is looking at, cached 45s |
+
+The page polls every 60s and re-polls when a backgrounded tab comes forward, so the board
+is at most a couple of minutes behind, and the **live** button on any row is current to
+the second.
+
+**The edge TTL is the real ceiling.** Data was originally published with
+`s-maxage=1800`, which capped freshness at 30 minutes no matter how often the refresher
+ran — refreshing faster would have changed nothing a visitor could see. Cache lifetime
+and refresh interval have to be decided together.
+
+Going below ~10 minutes stops being polite to an undocumented endpoint. True
+per-visitor-real-time would mean every page load hits Apple, which is exactly what the
+cache exists to prevent and the fastest way to get blocked. The on-demand check is the
+honest answer to "is it there *right now*".
 
 ### Deploying
 
