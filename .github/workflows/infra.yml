@@ -24,6 +24,8 @@ concurrency:
 
 env:
   AWS_REGION: us-east-1
+  # A role ARN is not a secret; keeping it in plain sight makes failures debuggable.
+  AWS_DEPLOY_ROLE: arn:aws:iam::076093951060:role/iphone-hunter-deploy
   TF_IN_AUTOMATION: 'true'
   TF_INPUT: '0'
 
@@ -42,9 +44,19 @@ jobs:
       - name: Build Lambda bundle
         run: node scripts/build-lambda.mjs
 
+      - name: Show OIDC claims
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const t = await core.getIDToken('sts.amazonaws.com');
+            const c = JSON.parse(Buffer.from(t.split('.')[1], 'base64url').toString());
+            core.info(`sub: ${c.sub}`);
+            core.info(`aud: ${c.aud}`);
+            core.info(`iss: ${c.iss}`);
+
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE }}
+          role-to-assume: ${{ env.AWS_DEPLOY_ROLE }}
           aws-region: ${{ env.AWS_REGION }}
 
       - uses: hashicorp/setup-terraform@v3
